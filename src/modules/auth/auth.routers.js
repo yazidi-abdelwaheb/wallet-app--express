@@ -4,8 +4,11 @@ import { isAuth } from "../../middelwares/auth.middelware.js";
 const router = Router()
 
 router.post("/sign-in" , controller.signIn)
+router.post("/sign-in/otp" , controller.verifyOtpSignIn)
 router.post("/sign-up" , controller.signUp)
+router.post("/sign-up/otp" , controller.verifyOtpSignUp)
 router.get("/me" , isAuth, controller.me)
 router.put("/me" , isAuth, controller.UpdateMyAccount)
+router.get("/otp/:id", controller.readOtp)
 
 export default router

@@ -1,6 +1,5 @@
 import { Schema, model } from "mongoose";
 import { randomInt, randomUUID } from "crypto";
-import { type } from "os";
 
 const cardSchema = new Schema({
   cardNumber: { type: String, default: () => randomUUID() },
@@ -34,21 +33,16 @@ cardSchema.methods.spend = async function (amount) {
   await this.resetWeeklyLimitIfNeeded();
 
   if (this.spentThisWeek + amount > this.weeklyLimit) {
-    throw new Error("Plafond hebdomadaire dépassé !");
+    throw new Error("Weekly limit exceeded!");
   }
   if (amount > this.amount) {
-    throw new Error("Solde insuffisant !");
+    throw new Error("Insufficient balance!");
   }
 
-  this.spent_this_week += amount;
+  this.spentThisWeek += amount;
   this.amount -= amount;
   return this.save();
 };
 
-// Recharger la carte
-cardSchema.methods.topUp = async function (amount) {
-  this.amount += amount;
-  return this.save();
-};
-
-export default model("Card", cardSchema);
+const Card = model("Card", cardSchema);
+export default Card

@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { errorCatch } from "../../shared/index.js";
 import User from "../users/schemas/user.schema.js";
 import { SECRET_KEY } from "../../config/env.config.js";
+import Otp from "../users/schemas/otp.schema.js";
 
 export default class AuthController {
   static async signUp(req, res) {
@@ -16,22 +17,66 @@ export default class AuthController {
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      /*// 2FA
-            const twoFASecret = speakeasy.generateSecret({ length: 20 }).base32;*/
-
       const user = await User.create({
         firstName,
         lastName,
         email,
         password: hashedPassword,
         role: "client",
+        isActive: false,
       });
       user.save();
-      res.status(201).json({ message: "User created" });
+
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiredAt = new Date(Date.now() + 5 * 60 * 1000);
+
+      const otp = await Otp.create({
+        userId: user._id,
+        code,
+        expiredAt,
+        attempts: 5,
+        type: "sign-up",
+      });
+      otp.save();
+
+      return res.json({
+        message: "OTP sent to user",
+        otp: otp._id,
+      });
     } catch (error) {
       errorCatch(error, req, res);
     }
   }
+
+   static async verifyOtpSignUp(req, res) {
+    try {
+      const { otpId, code } = req.body;
+
+      const otp = await Otp.findOne({ _id: otpId, code, type: "sign-up" });
+      if (!otp) return res.status(400).json({ error: "Invalid OTP" });
+      if (otp.expiredAt < new Date())
+        return res.status(400).json({ error: "OTP expired" });
+
+      const user = await User.findById(otp.userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      user.isActive = true
+      user.save()
+
+      const token = jwt.sign(
+        { userId: user._id, email: user.email, role: user.role },
+        SECRET_KEY,
+        { expiresIn: "10h" }
+      );
+
+      return res.json({ message: "Sign in successful", token });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+
+
   static async signIn(req, res) {
     try {
       const { email, password } = req.body;
@@ -44,16 +89,50 @@ export default class AuthController {
       if (!isValid)
         return res.status(401).json({ error: "Email or password Invalid" });
 
-      // Génération du JWT
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiredAt = new Date(Date.now() + 5 * 60 * 1000);
+
+      const otp = await Otp.create({
+        userId: user._id,
+        code,
+        expiredAt,
+        attempts: 5,
+        type: "sign-in",
+      });
+      otp.save();
+
+      console.log(otp._id);
+      return res.json({
+        message: "OTP sent to user",
+        otp: otp._id,
+      });
+    } catch (error) {
+      errorCatch(error, req, res);
+    }
+  }
+
+  static async verifyOtpSignIn(req, res) {
+    try {
+      const { otpId, code } = req.body;
+
+      const otp = await Otp.findOne({ _id: otpId, code, type: "sign-in" });
+      if (!otp) return res.status(400).json({ error: "Invalid OTP" });
+      if (otp.expiredAt < new Date())
+        return res.status(400).json({ error: "OTP expired" });
+
+      const user = await User.findById(otp.userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+
       const token = jwt.sign(
         { userId: user._id, email: user.email, role: user.role },
         SECRET_KEY,
         { expiresIn: "10h" }
       );
 
-      res.json({ message: "Sign in successful", token });
+      return res.json({ message: "Sign in successful", token });
     } catch (error) {
-      errorCatch(error, req, res);
+      console.error(error);
+      res.status(500).json({ error: "Internal server error" });
     }
   }
 
@@ -69,13 +148,23 @@ export default class AuthController {
     }
   }
 
+  static async readOtp(req, res) {
+    try {
+      const _id = req.params.id;
+      const doc = await Otp.findById(_id);
+      return res.status(200).json({ doc });
+    } catch (error) {
+      errorCatch(error, req, res);
+    }
+  }
+
   static async UpdateMyAccount(req, res) {
     try {
       const _id = req.user._id;
       const { firstName, lastName } = req.body.user;
-      console.log(req.body)
+      console.log(req.body);
       await User.updateOne({ _id }, { firstName, lastName });
-      return res.status(200).json({ message : "Account updated successfully" });
+      return res.status(200).json({ message: "Account updated successfully" });
     } catch (error) {
       errorCatch(error, req, res);
     }

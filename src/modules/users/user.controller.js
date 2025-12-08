@@ -1,4 +1,4 @@
-import { errorCatch } from "../../shared/index.js";
+import { CustomError, errorCatch } from "../../shared/index.js";
 import User from "./schemas/user.schema.js";
 
 const model = User;
@@ -83,4 +83,35 @@ export default class UserController {
       errorCatch(error, req, res);
     }
   }
+
+  static async rechargeBalance(req, res) {
+  try {
+    const { amount } = req.body;
+    const _id = req.user._id;
+
+    const amountNumber = parseInt(amount, 10);
+
+    if (isNaN(amountNumber) || amountNumber <= 0) {
+      throw new CustomError("This amount is not valid!", 400);
+    }
+
+    await model.updateOne({ _id }, { $inc: { amount: amountNumber } });
+
+    return res.json({ url: "http://localhost:4500/payment?amount=" + amountNumber });
+  } catch (error) {
+    errorCatch(error, req, res);
+  }
+}
+
+
+ static async readAmount(req, res) {
+  try {
+    const { _id } = req.user;
+    const user = await model.findById(_id).select("amount");
+    return res.status(200).json({ amount: user.amount });
+  } catch (error) {
+    errorCatch(error, req, res);
+  }
+}
+
 }

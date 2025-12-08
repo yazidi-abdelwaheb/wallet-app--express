@@ -11,11 +11,6 @@ const userSchema = new Schema({
   createdAt: { type: Date, default: Date.now },
   isActive: { type: Boolean, default: true },
   isDeleted: { type: Boolean, default: false },
-  OTP:{
-    code : { type: String },
-    expiresAt : { type: Date },
-    attempts : { type: Number}
-  }
 });
 
 const User = model("Users", userSchema);
