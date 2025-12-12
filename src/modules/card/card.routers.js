@@ -11,6 +11,8 @@ router.get("/:id", isAuth, controller.readOne);
 router.put("/:id", isAuth, controller.updateOne);
 router.delete("/:id", isAuth, controller.deleteOne);
 
-router.patch("/:id/recharge", isAuth, controller.recharge);
+router.patch("/recharge/:id", isAuth, controller.recharge);
+router.patch("/toggleActive/:id", isAuth, controller.toggleActive);
+
 
 export default router;

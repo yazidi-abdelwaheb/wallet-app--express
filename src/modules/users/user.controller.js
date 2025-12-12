@@ -97,7 +97,7 @@ export default class UserController {
 
     await model.updateOne({ _id }, { $inc: { amount: amountNumber } });
 
-    return res.json({ url: "http://localhost:4500/payment?amount=" + amountNumber });
+    return res.json({ message : "Balance rechage successfully!" });
   } catch (error) {
     errorCatch(error, req, res);
   }

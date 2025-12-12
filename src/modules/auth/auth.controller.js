@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { errorCatch } from "../../shared/index.js";
+import { errorCatch, resetPasswordTemplate, sendMail, subjects, verificationLoginTemplate, verificationMailTemplate } from "../../shared/index.js";
 import User from "../users/schemas/user.schema.js";
 import { SECRET_KEY } from "../../config/env.config.js";
 import Otp from "../users/schemas/otp.schema.js";
@@ -23,7 +23,7 @@ export default class AuthController {
         email,
         password: hashedPassword,
         role: "client",
-        isActive: false,
+        accountActive: false,
       });
       user.save();
 
@@ -39,16 +39,23 @@ export default class AuthController {
       });
       otp.save();
 
-      return res.json({
+      res.json({
         message: "OTP sent to user",
         otp: otp._id,
       });
+
+      await sendMail(
+        user.email,
+        subjects.verification_mail,
+        verificationMailTemplate({ code: code })
+      );
     } catch (error) {
+      console.error(error)
       errorCatch(error, req, res);
     }
   }
 
-   static async verifyOtpSignUp(req, res) {
+  static async verifyOtpSignUp(req, res) {
     try {
       const { otpId, code } = req.body;
 
@@ -60,8 +67,8 @@ export default class AuthController {
       const user = await User.findById(otp.userId);
       if (!user) return res.status(404).json({ error: "User not found" });
 
-      user.isActive = true
-      user.save()
+      user.accountActive = true;
+      user.save();
 
       const token = jwt.sign(
         { userId: user._id, email: user.email, role: user.role },
@@ -75,7 +82,6 @@ export default class AuthController {
       res.status(500).json({ error: "Internal server error" });
     }
   }
-
 
   static async signIn(req, res) {
     try {
@@ -102,11 +108,17 @@ export default class AuthController {
       otp.save();
 
       console.log(otp._id);
-      return res.json({
+      res.json({
         message: "OTP sent to user",
         otp: otp._id,
       });
+      await sendMail(
+        user.email,
+        subjects.verification_login,
+        verificationLoginTemplate({ code: code })
+      );
     } catch (error) {
+      console.error(error)
       errorCatch(error, req, res);
     }
   }

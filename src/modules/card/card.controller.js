@@ -8,16 +8,27 @@ export default class CardController {
   static async liste(req, res) {
     try {
       const userId = req.user._id;
-      let { page, limit, search } = req.query;
+      let { page, limit, search, isDeleted , isActive } = req.query;
 
+      // pagination
       page = parseInt(page, 10);
       limit = parseInt(limit, 10);
-
       if (isNaN(page) || page < 1) page = 1;
       if (isNaN(limit) || limit < 1) limit = 4;
 
-      let filter = { userId , isActive : true , isDeleted : false  };
+      // valeurs par défaut
+      let filter = { userId };
 
+      // conversion string -> booléen
+      if (typeof isActive === "string") {
+        filter.isActive = isActive === "true";
+      }
+
+      if (typeof isDeleted === "string") {
+        filter.isDeleted = isDeleted === "true";
+      }
+
+      // recherche textuelle
       if (search && search.trim()) {
         filter.$or = [
           { holderName: { $regex: search.trim(), $options: "i" } },
@@ -47,8 +58,13 @@ export default class CardController {
 
   static async all(req, res) {
     try {
+      const { isActive, isDeleted } = req.query;
       const userId = req.user._id;
-      const doc = await model.find({ userId , isActive : true , isDeleted : false  });
+      const doc = await model.find({
+        userId,
+        isActive: true,
+        isDeleted: false,
+      });
       return res.status(201).json({ doc });
     } catch (error) {
       errorCatch(error, req, res);
@@ -103,14 +119,20 @@ export default class CardController {
 
   static async readByCardNumber(req, res) {
     try {
-      const { cardNumber } = req.params.cardNumber;
-      const doc = await model.findOne({ cardNumber , isActive : true , isDeleted : false }).select('cardNumber holderName');
-      if(!doc){
-        throw new CustomError("Card not found",400)
+      const { cardNumber } = req.params;
+      console.log(cardNumber)
+      const doc = await model
+        .findOne({ cardNumber, isActive: true, isDeleted: false })
+        .select("cardNumber holderName");
+      if (!doc) {
+        throw new CustomError("Card not found", 400);
       }
 
-      return res.status(201).json({ cardNumber : doc.cardNumber , holderName : doc.holderName });
+      return res
+        .status(201)
+        .json({ cardNumber: doc.cardNumber, holderName: doc.holderName });
     } catch (error) {
+      console.log(error)
       errorCatch(error, req, res);
     }
   }
@@ -127,10 +149,28 @@ export default class CardController {
     }
   }
 
+  static async toggleActive(req, res) {
+    try {
+      const _id = req.params.id;
+      const doc = await model.findById(_id);
+      doc.isActive = !doc.isActive
+      await doc.save();
+      return res.status(200).json({ message: "Status changed successfully" });
+    } catch (error) {
+      errorCatch(error, req, res);
+    }
+  }
+
   static async deleteOne(req, res) {
     try {
       const _id = req.params.id;
-      await model.deleteOne({ _id });
+      const doc = await model.findById(_id);
+      doc.isActive =false
+      doc.isDeleted = true
+      const amount = doc.amount
+      await User.updateOne({ _id : doc.userId }, { $inc: { amount: amount } });
+      doc.amount = 0
+      await doc.save()
       return res.status(200).json({ message: "Card deleted successfully" });
     } catch (error) {
       errorCatch(error, req, res);

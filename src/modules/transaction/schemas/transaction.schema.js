@@ -16,7 +16,10 @@ const transactionSchema = new Schema(
     destinationCard: {
       type: Schema.Types.ObjectId,
       ref: "Card",
-      required: true,
+    },
+    destinationUser : {
+      type: Schema.Types.ObjectId,
+      ref: "Users",
     },
     amount: {
       type: Number,
