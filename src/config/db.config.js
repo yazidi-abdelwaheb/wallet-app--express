@@ -1,9 +1,12 @@
 import mongoose from "mongoose";
-import { DB_NAME } from "./env.config.js";
+import { DB_NAME, NODE_ENV ,DB_PASSWORD } from "./env.config.js";
 
-const mongoUri = `mongodb://localhost:27017/${DB_NAME}`;
+const mongoUri =
+  NODE_ENV === "production"
+  ? `mongodb+srv://walletapp:${DB_PASSWORD}@cluster0.vs8qxcw.mongodb.net/${DB_NAME}`
+  : `mongodb://localhost:27017/${DB_NAME}`;
 
-async function connectDB() {
+export default async function connectDB() {
   try {
     await mongoose.connect(mongoUri);
 
@@ -13,5 +16,3 @@ async function connectDB() {
     process.exit(1);
   }
 }
-
-connectDB();

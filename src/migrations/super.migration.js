@@ -1,4 +1,4 @@
-import "../config/db.config.js";
+import   "../config/db.config.js";
 import User from "../modules/users/schemas/user.schema.js";
 import bcrypt from "bcrypt";
 async function migrateSuperAdmin() {
@@ -19,8 +19,9 @@ async function migrateSuperAdmin() {
   
   superAdmin.password = await bcrypt.hash(superAdmin.password, 10);
   await superAdmin.save();
-  console.log("Super admin user created successfully.");
+  console.log("Super admin created successfully.");
 }
+
 migrateSuperAdmin()
   .then(() => {
     console.log("Migration completed.");
@@ -30,3 +31,5 @@ migrateSuperAdmin()
     console.error("Migration failed:", error);
     process.exit(1);
   });
+
+export default migrateSuperAdmin;
