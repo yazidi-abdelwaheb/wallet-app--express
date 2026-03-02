@@ -1,16 +1,19 @@
 import nodemailer from "nodemailer";
-import { EMAIL_PASS, EMAIL_USER } from "../../config/env.config.js";
+import { EMAIL_PASS, EMAIL_USER, NODE_ENV } from "../../config/env.config.js";
 
-const transporter = nodemailer.createTransport({
-  host: "127.0.0.1",
-  port: 1025,
-  secure: false,
-  /*service: "gmail",
-  auth: {
-    user: EMAIL_USER,
-    pass: EMAIL_PASS,
-  },*/
-});
+const getConfigTransporter = () => {
+  return NODE_ENV === "production"
+    ? {
+        service: "gmail",
+        auth: {
+          user: EMAIL_USER,
+          pass: EMAIL_PASS,
+        },
+      }
+    : { host: "127.0.0.1", port: 1025, secure: false };
+};
+
+const transporter = nodemailer.createTransport(getConfigTransporter());
 
 /**
  * Sends an email using gmail service
