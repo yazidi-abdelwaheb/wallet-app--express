@@ -1,6 +1,13 @@
 export { CustomError, errorCatch } from "./utils/error.utils.js";
 
-export { transactionTypeEnums , userRoleEnumes } from "./utils/enums.utils.js";
+export {
+  transactionTypeEnums,
+  userRoleEnums,
+  FeaturesTypeEnum,
+  featuresCodeEnum,
+  featuresActionsEnum,
+  featuresDestinationEnums,
+} from "./utils/enums.utils.js";
 
 export {
   sendMail,

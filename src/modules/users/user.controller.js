@@ -1,4 +1,4 @@
-import { CustomError, errorCatch, userRoleEnumes } from "../../shared/index.js";
+import { CustomError, errorCatch, userRoleEnums } from "../../shared/index.js";
 import User from "./schemas/user.schema.js";
 
 const model = User;
@@ -32,7 +32,7 @@ export default class UserController {
     try {
       const { user } = req.body;
       const doc = new model(user);
-      doc.role = userRoleEnumes.admin;
+      doc.role = userRoleEnums.admin;
       await doc.save();
       return res
         .status(200)
@@ -45,7 +45,7 @@ export default class UserController {
   static async readOne(req, res) {
     try {
       const _id = req.params.id;
-      const doc = await model.findOne({ _id, role: userRoleEnumes.admin });
+      const doc = await model.findOne({ _id, role: userRoleEnums.admin });
       return res.status(201).json({ doc });
     } catch (error) {
       errorCatch(error, req, res);

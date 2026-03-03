@@ -1,12 +1,12 @@
 import { model, Schema } from "mongoose";
-import { userRoleEnumes } from "../../../shared/index.js";
+import { userRoleEnums } from "../../../shared/index.js";
 
 const userSchema = new Schema({
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role : { type: String, enum: Object.values(userRoleEnumes), default: userRoleEnumes.client },  
+  role : { type: String, enum: Object.values(userRoleEnums), default: userRoleEnums.client },  
   accountActive: { type: Boolean, default: false },
   amount: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },

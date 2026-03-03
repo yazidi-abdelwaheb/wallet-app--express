@@ -1,7 +1,7 @@
 import { askQuestion } from "../utils.js";
 import User from "../../modules/users/schemas/user.schema.js";
 import connectDB from "../../config/db.config.js";
-import { userRoleEnumes } from "../../shared/index.js";
+import { userRoleEnums } from "../../shared/index.js";
 import bcrypt from "bcrypt"
 
 const validateInput = async(field, value) => {
@@ -47,7 +47,7 @@ const createSuperAdminMigration = async() => {
 
     await connectDB();
 
-    const existingAdmin = await User.findOne({ role: userRoleEnumes.super });
+    const existingAdmin = await User.findOne({ role: userRoleEnums.super });
     
     if (existingAdmin) {
       //console.log("Super admin already exists. Do you like create author super admin ? [y/n] : ");
@@ -70,7 +70,7 @@ const createSuperAdminMigration = async() => {
       lastName,
       firstName,
       password : hashedPassword,
-      role: userRoleEnumes.super,
+      role: userRoleEnums.super,
       accountActive: true,
     });
     
