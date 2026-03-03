@@ -4,7 +4,7 @@ import User from "./schemas/user.schema.js";
 const model = User;
 
 export default class UserController {
-  static async liste(req, res) {
+  static async list(req, res) {
     try {
       const { role, search, page, limit } = req.query;
       const filter = {};

@@ -1,6 +1,6 @@
 import { model, Schema } from "mongoose";
 
-const otpSchema = new Schema({
+const optSchema = new Schema({
   userId: { type: Schema.ObjectId, ref: "Users", required: true },
   code: { type: String },
   expiredAt: { type: Date },
@@ -12,6 +12,6 @@ const otpSchema = new Schema({
   },
 });
 
-const Otp = model("Otps", otpSchema);
+const Opt = model("opts", optSchema);
 
-export default Otp;
+export default Opt;

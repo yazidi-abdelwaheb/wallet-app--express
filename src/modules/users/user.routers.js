@@ -10,7 +10,7 @@ routerBalance.get("/",  controller.readAmount);
 
 router.use("/balance", routerBalance);
 
-router.get("/",  controller.liste);
+router.get("/",  controller.list);
 router.post("/",  controller.createOne);
 router.get("/:id",  controller.readOne);
 router.put("/:id",  controller.updateOne);

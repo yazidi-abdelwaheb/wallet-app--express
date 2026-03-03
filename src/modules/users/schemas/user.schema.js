@@ -6,7 +6,7 @@ const userSchema = new Schema({
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role : { type: String, enum: Object.values(userRoleEnums), default: userRoleEnums.client },  
+  role : { type: String, enum: Object.values(userRoleEnums), default: userRoleEnums.client },
   accountActive: { type: Boolean, default: false },
   amount: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },

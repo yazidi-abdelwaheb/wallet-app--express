@@ -1,9 +1,16 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { errorCatch, resetPasswordTemplate, sendMail, subjects, verificationLoginTemplate, verificationMailTemplate } from "../../shared/index.js";
+import {
+  errorCatch,
+  resetPasswordTemplate,
+  sendMail,
+  subjects,
+  verificationLoginTemplate,
+  verificationMailTemplate,
+} from "../../shared/index.js";
 import User from "../users/schemas/user.schema.js";
 import { SECRET_KEY } from "../../config/env.config.js";
-import Otp from "../users/schemas/otp.schema.js";
+import Opt from "./schemas/opt.schema.js";
 
 export default class AuthController {
   static async signUp(req, res) {
@@ -30,41 +37,41 @@ export default class AuthController {
       const code = Math.floor(100000 + Math.random() * 900000).toString();
       const expiredAt = new Date(Date.now() + 5 * 60 * 1000);
 
-      const otp = await Otp.create({
+      const opt = await Opt.create({
         userId: user._id,
         code,
         expiredAt,
         attempts: 5,
         type: "sign-up",
       });
-      otp.save();
+      opt.save();
 
       res.json({
-        message: "OTP sent to user",
-        otp: otp._id,
+        message: "opt sent to user",
+        opt: opt._id,
       });
 
       await sendMail(
         user.email,
         subjects.verification_mail,
-        verificationMailTemplate({ code: code })
+        verificationMailTemplate({ code: code }),
       );
     } catch (error) {
-      console.error(error)
+      console.error(error);
       errorCatch(error, req, res);
     }
   }
 
-  static async verifyOtpSignUp(req, res) {
+  static async verifyOPTSignUp(req, res) {
     try {
-      const { otpId, code } = req.body;
+      const { optId, code } = req.body;
 
-      const otp = await Otp.findOne({ _id: otpId, code, type: "sign-up" });
-      if (!otp) return res.status(400).json({ error: "Invalid OTP" });
-      if (otp.expiredAt < new Date())
-        return res.status(400).json({ error: "OTP expired" });
+      const opt = await Opt.findOne({ _id: optId, code, type: "sign-up" });
+      if (!opt) return res.status(400).json({ error: "Invalid opt" });
+      if (opt.expiredAt < new Date())
+        return res.status(400).json({ error: "opt expired" });
 
-      const user = await User.findById(otp.userId);
+      const user = await User.findById(opt.userId);
       if (!user) return res.status(404).json({ error: "User not found" });
 
       user.accountActive = true;
@@ -73,7 +80,7 @@ export default class AuthController {
       const token = jwt.sign(
         { userId: user._id, email: user.email, role: user.role },
         SECRET_KEY,
-        { expiresIn: "10h" }
+        { expiresIn: "10h" },
       );
 
       return res.json({ message: "Sign in successful", token });
@@ -98,47 +105,47 @@ export default class AuthController {
       const code = Math.floor(100000 + Math.random() * 900000).toString();
       const expiredAt = new Date(Date.now() + 5 * 60 * 1000);
 
-      const otp = await Otp.create({
+      const opt = await Opt.create({
         userId: user._id,
         code,
         expiredAt,
         attempts: 5,
         type: "sign-in",
       });
-      otp.save();
+      opt.save();
 
-      console.log(otp._id);
+      console.log(opt._id);
       res.json({
-        message: "OTP sent to user",
-        otp: otp._id,
+        message: "opt sent to user",
+        opt: opt._id,
       });
       await sendMail(
         user.email,
         subjects.verification_login,
-        verificationLoginTemplate({ code: code })
+        verificationLoginTemplate({ code: code }),
       );
     } catch (error) {
-      console.error(error)
+      console.error(error);
       errorCatch(error, req, res);
     }
   }
 
-  static async verifyOtpSignIn(req, res) {
+  static async verifyOTPSignIn(req, res) {
     try {
-      const { otpId, code } = req.body;
+      const { optId, code } = req.body;
 
-      const otp = await Otp.findOne({ _id: otpId, code, type: "sign-in" });
-      if (!otp) return res.status(400).json({ error: "Invalid OTP" });
-      if (otp.expiredAt < new Date())
-        return res.status(400).json({ error: "OTP expired" });
+      const opt = await Opt.findOne({ _id: optId, code, type: "sign-in" });
+      if (!opt) return res.status(400).json({ error: "Invalid opt" });
+      if (opt.expiredAt < new Date())
+        return res.status(400).json({ error: "opt expired" });
 
-      const user = await User.findById(otp.userId);
+      const user = await User.findById(opt.userId);
       if (!user) return res.status(404).json({ error: "User not found" });
 
       const token = jwt.sign(
         { userId: user._id, email: user.email, role: user.role },
         SECRET_KEY,
-        { expiresIn: "10h" }
+        { expiresIn: "10h" },
       );
 
       return res.json({ message: "Sign in successful", token });
@@ -152,7 +159,7 @@ export default class AuthController {
     try {
       const _id = req.user._id;
       const doc = await User.findById(_id).select(
-        "lastName firstName email role"
+        "lastName firstName email role",
       );
       return res.status(200).json({ doc });
     } catch (error) {
@@ -160,10 +167,10 @@ export default class AuthController {
     }
   }
 
-  static async readOtp(req, res) {
+  static async readOpt(req, res) {
     try {
       const _id = req.params.id;
-      const doc = await Otp.findById(_id);
+      const doc = await Opt.findById(_id);
       return res.status(200).json({ doc });
     } catch (error) {
       errorCatch(error, req, res);
