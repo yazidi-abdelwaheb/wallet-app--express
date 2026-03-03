@@ -85,7 +85,7 @@ export default class FeatureController {
 
       features.isActive = !features.isActive;
 
-      const status = features.isActive === true ? "activated" : "desactivated";
+      const status = features.isActive === true ? "activated" : "deactivated";
 
       features.save();
 

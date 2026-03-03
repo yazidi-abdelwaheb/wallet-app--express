@@ -93,17 +93,16 @@ export const loadData = async (dataname) => {
     const filePath = path.join(__dirname, "data", dataPath);
 
     const data = fs.readFileSync(filePath, "utf8");
-
     try {
       const jsonData = JSON.parse(data);
       return jsonData;
     } catch (parseErr) {
       throw new Error(
-        `Le contenu de "${dataname}.json" n'est pas un JSON valide.`
+        `file content error: ${filePath} is not valid JSON`
       );
     }
   } catch (err) {
-    console.error(`[loadData] Erreur: ${err.message}`);
+    console.error(`[loadData] Error: ${err.message}`);
     return null;
   }
 };
@@ -115,11 +114,13 @@ export const loadData = async (dataname) => {
 export const init_migration = async () => {
   try {
     // deleted migration create-super-admin from a principale migration en mode prod
-    const migrations_data = getListMigrationName().filter(e=>e.name!=="create-super-admin");
+    const migrations_data = getListMigrationName().filter(
+      (e) => e.name !== "create-super-admin",
+    );
     for (const migration of migrations_data) {
       const filePath = `./migrations-files/${migration.filePath.replace(
         "#",
-        "%23"
+        "%23",
       )}`;
       console.log();
       await import(filePath);
@@ -129,9 +130,3 @@ export const init_migration = async () => {
     throw error;
   }
 };
-
-// *********  CONST _id  ******** //
-
-export const GROUP_ID_CLIENTS = "68039e8f21d4aa01298149ef";
-export const COMPANY_ID = "67bf7cf4c7ef2a1a638f6144";
-

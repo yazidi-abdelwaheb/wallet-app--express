@@ -1,0 +1,41 @@
+[
+  {
+    "_id": "62c2c6ba6b473700112d5c26",
+    "code": "setting_admin",
+    "title": "Setting",
+    "isActive": true,
+    "type": "group",
+    "subtitle": "Software settings management",
+    "order": 1,
+    "divider": null,
+    "featuresIdParent": null,
+    "icon": "settings",
+    "link": null
+  },
+  {
+    "_id": "62c2c6ba6b473700112d5c27",
+    "code": "administration",
+    "title": "Administration",
+    "isActive": true,
+    "type": "group",
+    "subtitle": "Application administration management",
+    "order": 1,
+    "divider": null,
+    "featuresIdParent": null,
+    "icon": "settings",
+    "link": null
+  },
+  {
+    "_id": "62c2c6ba6b473700112d5c28",
+    "code": "dashboard_admin_finance",
+    "title": "Dashboard",
+    "isActive": true,
+    "type": "basic",
+    "subtitle": "Dashboard finance",
+    "order": 1,
+    "divider": null,
+    "featuresIdParent": "62c2c6ba6b473700112d5c26",
+    "icon": "settings",
+    "link": "/dashboard"
+  }
+]
