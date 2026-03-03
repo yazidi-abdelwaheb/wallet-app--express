@@ -6,4 +6,10 @@ const transactionTypeEnums = {
     receive : "RECEIVE",
 }
 
-export {transactionTypeEnums}
+const userRoleEnumes = {
+    super : "SUPER",
+    admin : "ADMIN",
+    client : "CLIENT"
+}
+
+export {transactionTypeEnums,userRoleEnumes}

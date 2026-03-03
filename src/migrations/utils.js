@@ -2,9 +2,6 @@ import path from "path";
 import readline from "readline";
 import { fileURLToPath } from "url";
 import fs from "fs";
-import Company from "../modules/companys/companys.schema.js";
-import Users from "../modules/users/users.schema.js";
-import Features from "../modules/features/features.schema.js";
 
 /**
  * define all commands and aliases for system

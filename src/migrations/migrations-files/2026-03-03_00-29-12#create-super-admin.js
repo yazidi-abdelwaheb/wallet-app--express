@@ -1,7 +1,8 @@
 import { askQuestion } from "../utils.js";
-import Users from "../../modules/users/users.schema.js";
-import { setupMongoServer } from "../../config/db.config.js";
-import { Types } from "mongoose";
+import User from "../../modules/users/schemas/user.schema.js";
+import connectDB from "../../config/db.config.js";
+import { userRoleEnumes } from "../../shared/index.js";
+import bcrypt from "bcrypt"
 
 const validateInput = async(field, value) => {
   switch (field) {
@@ -14,11 +15,11 @@ const validateInput = async(field, value) => {
     case "email":
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(value)) return "Invalid email format.";
-      if(await Users.findOne({ email: value})) return "Email already used.";
+      if(await User.findOne({ email: value})) return "Email already used.";
       break;
     case "password":
-      if (value.length < 8 || !/\d/.test(value) || !/[a-zA-Z]/.test(value)) {
-        return "Password must be at least 8 characters, contain a letter and a number.";
+      if (value.length < 6 || !/\d/.test(value) || !/[a-zA-Z]/.test(value)) {
+        return "Password must be at least 6 characters, contain a letter and a number.";
       }
       break;
     default:
@@ -44,47 +45,46 @@ const createSuperAdminMigration = async() => {
   try {
     // Your migration logic here
 
-    await setupMongoServer();
+    await connectDB();
 
-    const existingAdmin = await Users.findOne({ type: "super" });
+    const existingAdmin = await User.findOne({ role: userRoleEnumes.super });
     
     if (existingAdmin) {
       //console.log("Super admin already exists. Do you like create author super admin ? [y/n] : ");
       let value = await askQuestion("Super admin already exists. Do you like create other super admin ? [y/n] :");
-      if(value === "n")
+      if(value === "n" || value === "N")
       return;
     }
 
     console.log("Creating new super admin...");
 
     
-    const last_name = await getValidatedInput("last_name", "Enter your Last name: ");
-    const first_name = await getValidatedInput("first_name", "Enter your First name: ");
+    const lastName =await getValidatedInput("last_name", "Enter your Last name: ");
+    const firstName = await getValidatedInput("first_name", "Enter your First name: ");
     const email = await getValidatedInput("email", "Enter your Email: ");
     const password = await getValidatedInput("password", "Enter your Password: ");
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const superAdmin = new Users({
+    const superAdmin = new User({
       email,
-      last_name,
-      first_name,
-      password,
-      type: "super",
-      companyId : new Types.ObjectId("67bf7cf4c7ef2a1a638f6144"),
-      isActive: true,
+      lastName,
+      firstName,
+      password : hashedPassword,
+      role: userRoleEnumes.super,
+      accountActive: true,
     });
     
     
     
 
     await superAdmin.save();
-    console.log(`\nSuper admin ${last_name} ${first_name} created successfully!`);
+    console.log(`\nSuper admin ${lastName} ${lastName} created successfully!`);
     
   } catch (e) {
     console.error("An error occurred while running the migration: ", e);
+    process.exit(0)
   }finally {
-    
-      process.exit(0);
-    
+    process.exit(0)
   }
 }
 
