@@ -9,9 +9,11 @@ const getConnectionURI = () => {
 
 export default async function connectDB() {
   try {
-    await mongoose.connect(getConnectionURI());
 
-    console.log("MongoDB connected successfully");
+    const mongoURI = getConnectionURI()
+    await mongoose.connect(mongoURI);
+
+    console.log("MongoDB connected successfully in : " + mongoURI);
   } catch (error) {
     console.error("Error connecting to MongoDB:", error.message);
     process.exit(1);

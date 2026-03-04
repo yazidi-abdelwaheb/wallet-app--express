@@ -7,10 +7,13 @@ import {
   subjects,
   verificationLoginTemplate,
   verificationMailTemplate,
+  CustomError,
+  userRoleEnums,
 } from "../../shared/index.js";
 import User from "../users/schemas/user.schema.js";
 import { SECRET_KEY } from "../../config/env.config.js";
 import Opt from "./schemas/opt.schema.js";
+import mongoose, { model } from "mongoose";
 
 export default class AuthController {
   static async signUp(req, res) {
@@ -19,7 +22,7 @@ export default class AuthController {
 
       const existingUser = await User.findOne({ email });
       if (existingUser) {
-        return res.status(400).json({ error: "Email already exists" });
+        throw new CustomError("Email already exists", 400);
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -29,7 +32,7 @@ export default class AuthController {
         lastName,
         email,
         password: hashedPassword,
-        role: "client",
+        role: userRoleEnums.client,
         accountActive: false,
       });
       user.save();
@@ -47,7 +50,7 @@ export default class AuthController {
       opt.save();
 
       res.json({
-        message: "opt sent to user",
+        message: "OPT sent to user",
         opt: opt._id,
       });
 
@@ -57,7 +60,6 @@ export default class AuthController {
         verificationMailTemplate({ code: code }),
       );
     } catch (error) {
-      console.error(error);
       errorCatch(error, req, res);
     }
   }
@@ -66,13 +68,17 @@ export default class AuthController {
     try {
       const { optId, code } = req.body;
 
-      const opt = await Opt.findOne({ _id: optId, code, type: "sign-up" });
-      if (!opt) return res.status(400).json({ error: "Invalid opt" });
-      if (opt.expiredAt < new Date())
-        return res.status(400).json({ error: "opt expired" });
+      const opt = await Opt.findOne({ _id: optId, type: "sign-up" });
+
+      if (!opt) throw new CustomError("OPT not found, try again!", 400);
+
+      if (opt.attempts === 0)
+        throw new CustomError("The end OPT attempts, try again!", 400);
+      if (opt.expiredAt < new Date()) throw new CustomError("OPT expired", 400);
+      if (opt.code !== code) throw new CustomError("Invalid OPT code", 400);
 
       const user = await User.findById(opt.userId);
-      if (!user) return res.status(404).json({ error: "User not found" });
+      if (!user) throw new CustomError("User not found", 400);
 
       user.accountActive = true;
       user.save();
@@ -83,10 +89,12 @@ export default class AuthController {
         { expiresIn: "10h" },
       );
 
-      return res.json({ message: "Sign in successful", token });
+      return res.status(200).json({ message: "Sign Up successful", token });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Internal server error" });
+      const opt = await Opt.findById(req.body.optId);
+      opt.attempts = opt.attempts > 0 ? opt.attempts - 1 : 0;
+      await opt.save();
+      errorCatch(error, req, res);
     }
   }
 
@@ -116,7 +124,7 @@ export default class AuthController {
 
       console.log(opt._id);
       res.json({
-        message: "opt sent to user",
+        message: "OPT sent to user",
         opt: opt._id,
       });
       await sendMail(
@@ -125,7 +133,6 @@ export default class AuthController {
         verificationLoginTemplate({ code: code }),
       );
     } catch (error) {
-      console.error(error);
       errorCatch(error, req, res);
     }
   }
@@ -135,12 +142,11 @@ export default class AuthController {
       const { optId, code } = req.body;
 
       const opt = await Opt.findOne({ _id: optId, code, type: "sign-in" });
-      if (!opt) return res.status(400).json({ error: "Invalid opt" });
-      if (opt.expiredAt < new Date())
-        return res.status(400).json({ error: "opt expired" });
+      if (!opt) throw new CustomError("Invalid OPT code", 400);
+      if (opt.expiredAt < new Date()) throw new CustomError("OPT expired", 400);
 
       const user = await User.findById(opt.userId);
-      if (!user) return res.status(404).json({ error: "User not found" });
+      if (!user) throw new CustomError("User not found", 400);
 
       const token = jwt.sign(
         { userId: user._id, email: user.email, role: user.role },
@@ -148,10 +154,12 @@ export default class AuthController {
         { expiresIn: "10h" },
       );
 
-      return res.json({ message: "Sign in successful", token });
+      return res.status(200).json({ message: "Sign in successful", token });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Internal server error" });
+      const opt = await Opt.findById(req.body.optId);
+      opt.attempts = opt.attempts - 1;
+      await opt.save();
+      errorCatch(error, req, res);
     }
   }
 
@@ -161,7 +169,7 @@ export default class AuthController {
       const doc = await User.findById(_id).select(
         "lastName firstName email role",
       );
-      return res.status(200).json({ doc });
+      return res.status(200).json(doc);
     } catch (error) {
       errorCatch(error, req, res);
     }
@@ -171,7 +179,7 @@ export default class AuthController {
     try {
       const _id = req.params.id;
       const doc = await Opt.findById(_id);
-      return res.status(200).json({ doc });
+      return res.status(200).json(doc);
     } catch (error) {
       errorCatch(error, req, res);
     }

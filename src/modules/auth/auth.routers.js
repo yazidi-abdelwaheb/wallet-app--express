@@ -5,10 +5,10 @@ const router = Router()
 
 // Public routes
 router.post("/sign-in" , controller.signIn)
-router.post("/sign-in/otp" , controller.verifyOTPSignIn)
+router.post("/sign-in/opt" , controller.verifyOTPSignIn)
 router.post("/sign-up" , controller.signUp)
-router.post("/sign-up/otp" , controller.verifyOPTSignUp)
-router.get("/otp/:id", controller.readOpt)
+router.post("/sign-up/opt" , controller.verifyOPTSignUp)
+router.get("/opt/:id", controller.readOpt)
 
 // Protected routes for authenticated users
 router.get("/me" , isAuth, controller.me)
