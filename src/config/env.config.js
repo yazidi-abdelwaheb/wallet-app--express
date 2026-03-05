@@ -9,4 +9,12 @@ const EMAIL_PASS = process.env.EMAIL_PASS;
 const EMAIL_USER = process.env.EMAIL_USER;
 const DB_PASSWORD = process.env.DB_PASSWORD;
 
-export { NODE_ENV, PORT, DB_NAME, SECRET_KEY, EMAIL_PASS, EMAIL_USER, DB_PASSWORD };
+export {
+  NODE_ENV,
+  PORT,
+  DB_NAME,
+  SECRET_KEY,
+  EMAIL_PASS,
+  EMAIL_USER,
+  DB_PASSWORD,
+};
