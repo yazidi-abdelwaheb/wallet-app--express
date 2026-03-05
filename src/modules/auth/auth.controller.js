@@ -64,40 +64,6 @@ export default class AuthController {
     }
   }
 
-  static async verifyOPTSignUp(req, res) {
-    try {
-      const { optId, code } = req.body;
-
-      const opt = await Opt.findOne({ _id: optId, type: "sign-up" });
-
-      if (!opt) throw new CustomError("OPT not found, try again!", 400);
-
-      if (opt.attempts === 0)
-        throw new CustomError("The end OPT attempts, try again!", 400);
-      if (opt.expiredAt < new Date()) throw new CustomError("OPT expired", 400);
-      if (opt.code !== code) throw new CustomError("Invalid OPT code", 400);
-
-      const user = await User.findById(opt.userId);
-      if (!user) throw new CustomError("User not found", 400);
-
-      user.accountActive = true;
-      user.save();
-
-      const token = jwt.sign(
-        { userId: user._id, email: user.email, role: user.role },
-        SECRET_KEY,
-        { expiresIn: "10h" },
-      );
-
-      return res.status(200).json({ message: "Sign Up successful", token });
-    } catch (error) {
-      const opt = await Opt.findById(req.body.optId);
-      opt.attempts = opt.attempts > 0 ? opt.attempts - 1 : 0;
-      await opt.save();
-      errorCatch(error, req, res);
-    }
-  }
-
   static async signIn(req, res) {
     try {
       const { email, password } = req.body;
@@ -121,8 +87,6 @@ export default class AuthController {
         type: "sign-in",
       });
       opt.save();
-
-      console.log(opt._id);
       res.json({
         message: "OPT sent to user",
         opt: opt._id,
@@ -137,16 +101,25 @@ export default class AuthController {
     }
   }
 
-  static async verifyOTPSignIn(req, res) {
+  static async verifyOTP(req, res , type) {
     try {
       const { optId, code } = req.body;
 
-      const opt = await Opt.findOne({ _id: optId, code, type: "sign-in" });
-      if (!opt) throw new CustomError("Invalid OPT code", 400);
+      
+      const opt = await Opt.findOne({ _id: optId, type });
+
+      if (!opt) throw new CustomError("OPT not found, try again!", 400);
+
+      if (opt.attempts === 0)
+        throw new CustomError("The end OPT attempts, try again!", 400);
       if (opt.expiredAt < new Date()) throw new CustomError("OPT expired", 400);
+      if (opt.code !== code) throw new CustomError("Invalid OPT code", 400);
 
       const user = await User.findById(opt.userId);
       if (!user) throw new CustomError("User not found", 400);
+
+      user.accountActive = true;
+      user.save();
 
       const token = jwt.sign(
         { userId: user._id, email: user.email, role: user.role },
@@ -154,10 +127,10 @@ export default class AuthController {
         { expiresIn: "10h" },
       );
 
-      return res.status(200).json({ message: "Sign in successful", token });
+      return res.status(200).json({ message: `${type} successfully`, token });
     } catch (error) {
       const opt = await Opt.findById(req.body.optId);
-      opt.attempts = opt.attempts - 1;
+      opt.attempts = opt.attempts > 0 ? opt.attempts - 1 : 0;
       await opt.save();
       errorCatch(error, req, res);
     }
@@ -180,6 +153,30 @@ export default class AuthController {
       const _id = req.params.id;
       const doc = await Opt.findById(_id);
       return res.status(200).json(doc);
+    } catch (error) {
+      errorCatch(error, req, res);
+    }
+  }
+
+  static async resendCode(req, res) {
+    try {
+      const _id = req.params.id;
+      const doc = await Opt.findById(_id);
+      const user = await User.findById(doc.userId)
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiredAt = new Date(Date.now() + 5 * 60 * 1000);
+
+      doc.code = code;
+      doc.expiredAt = expiredAt
+      doc.attempts = 5
+      await doc.save()
+
+      await sendMail(
+        user.email,
+        subjects.verification_mail,
+        verificationMailTemplate({ code }),
+      );
+      return res.status(200).json({message : "code sent to user" , opt : doc});
     } catch (error) {
       errorCatch(error, req, res);
     }
