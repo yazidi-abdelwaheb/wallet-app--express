@@ -14,9 +14,4 @@ router.get("/opt/:id", controller.readOpt)
 router.post("/forgot-password",controller.forgotPassword)
 router.post("/opt/resend-code/:id", controller.resendCode)
 
-
-// Protected routes for authenticated users
-router.get("/me" , isAuth, controller.me)
-router.put("/me" , isAuth, controller.UpdateMyAccount)
-
 export default router

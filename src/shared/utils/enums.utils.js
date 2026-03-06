@@ -1,14 +1,25 @@
-//************** user enums ****************/
+//************** transaction enums ****************/
 const transactionTypeEnums = {
   transfer: "TRANSFER",
   top_up: "TOP-UP",
   receive: "RECEIVE",
 };
 
+//************** user enums ****************/
 const userRoleEnums = {
   super: "SUPER",
   admin: "ADMIN",
   client: "CLIENT",
+};
+
+const userThemeEnums = {
+  dark: "DARK",
+  light: "LIGHT",
+};
+const userLanguageEnums = {
+  en: "FR",
+  fr: "EN",
+  ar: "AR",
 };
 
 //************** features enums ****************/
@@ -57,4 +68,6 @@ export {
   featuresCodeEnum,
   featuresActionsEnum,
   featuresDestinationEnums,
+  userLanguageEnums,
+  userThemeEnums,
 };

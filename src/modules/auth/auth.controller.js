@@ -172,17 +172,6 @@ export default class AuthController {
     }
   }
 
-  static async me(req, res) {
-    try {
-      const _id = req.user._id;
-      const doc = await User.findById(_id).select(
-        "lastName firstName email role",
-      );
-      return res.status(200).json(doc);
-    } catch (error) {
-      errorCatch(error, req, res);
-    }
-  }
 
   static async readOpt(req, res) {
     try {
@@ -215,18 +204,6 @@ export default class AuthController {
       return res.status(200).json({message : "code sent to user" , opt : { attempts : doc.attempts , expiredAt : doc.expiredAt }});
     } catch (error) {
       console.log(error)
-      errorCatch(error, req, res);
-    }
-  }
-
-  static async UpdateMyAccount(req, res) {
-    try {
-      const _id = req.user._id;
-      const { firstName, lastName } = req.body.user;
-      console.log(req.body);
-      await User.updateOne({ _id }, { firstName, lastName });
-      return res.status(200).json({ message: "Account updated successfully" });
-    } catch (error) {
       errorCatch(error, req, res);
     }
   }

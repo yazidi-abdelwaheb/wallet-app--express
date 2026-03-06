@@ -1,4 +1,10 @@
-import { CustomError, errorCatch, userRoleEnums } from "../../shared/index.js";
+import {
+  CustomError,
+  errorCatch,
+  userLanguageEnums,
+  userRoleEnums,
+  userThemeEnums,
+} from "../../shared/index.js";
 import User from "./schemas/user.schema.js";
 
 const model = User;
@@ -85,33 +91,95 @@ export default class UserController {
   }
 
   static async rechargeBalance(req, res) {
-  try {
-    const { amount } = req.body;
-    const _id = req.user._id;
+    try {
+      const { amount } = req.body;
+      const _id = req.user._id;
 
-    const amountNumber = parseInt(amount, 10);
+      const amountNumber = parseInt(amount, 10);
 
-    if (isNaN(amountNumber) || amountNumber <= 0) {
-      throw new CustomError("This amount is not valid!", 400);
+      if (isNaN(amountNumber) || amountNumber <= 0) {
+        throw new CustomError("This amount is not valid!", 400);
+      }
+
+      await model.updateOne({ _id }, { $inc: { amount: amountNumber } });
+
+      return res.json({ message: "Balance recharge successfully!" });
+    } catch (error) {
+      errorCatch(error, req, res);
     }
-
-    await model.updateOne({ _id }, { $inc: { amount: amountNumber } });
-
-    return res.json({ message : "Balance rechage successfully!" });
-  } catch (error) {
-    errorCatch(error, req, res);
   }
-}
 
-
- static async readAmount(req, res) {
-  try {
-    const { _id } = req.user;
-    const user = await model.findById(_id).select("amount");
-    return res.status(200).json({ amount: user.amount });
-  } catch (error) {
-    errorCatch(error, req, res);
+  static async readAmount(req, res) {
+    try {
+      const { _id } = req.user;
+      const user = await model.findById(_id).select("amount");
+      return res.status(200).json({ amount: user.amount });
+    } catch (error) {
+      errorCatch(error, req, res);
+    }
   }
-}
 
+  static async UpdateMyAccount(req, res) {
+    try {
+      const _id = req.user._id;
+      const { firstName, lastName } = req.body.user;
+      console.log(req.body);
+      await User.updateOne({ _id }, { firstName, lastName });
+      return res.status(200).json({ message: "Account updated successfully" });
+    } catch (error) {
+      errorCatch(error, req, res);
+    }
+  }
+
+  static async me(req, res) {
+    try {
+      const _id = req.user._id;
+      const doc = await User.findById(_id).select(
+        "lastName firstName email role language theme",
+      );
+      return res.status(200).json(doc);
+    } catch (error) {
+      errorCatch(error, req, res);
+    }
+  }
+
+  static async changeTheme(req, res) {
+    try {
+      const { _id } = req.user;
+      let { theme } = req.body;
+
+      theme =
+        theme.trim().toUpperCase() in Object.values(userThemeEnums)
+          ? theme.trim().toUpperCase()
+          : userThemeEnums.light;
+
+      await User.updateOne({ _id }, { theme });
+
+      return res
+        .status(200)
+        .json({ message: `Theme changed successfully to ${theme}` });
+    } catch (error) {
+      errorCatch(error, req, res);
+    }
+  }
+
+   static async changeLanguage(req, res) {
+    try {
+      const { _id } = req.user;
+      let { language } = req.body;
+
+      language =
+        language.trim().toUpperCase() in Object.values(userLanguageEnums)
+          ? language.trim().toUpperCase()
+          : userLanguageEnums.en;
+
+      await User.updateOne({ _id }, { language });
+
+      return res
+        .status(200)
+        .json({ message: `Language changed successfully to ${language}` });
+    } catch (error) {
+      errorCatch(error, req, res);
+    }
+  }
 }
