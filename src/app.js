@@ -36,7 +36,7 @@ app.use("/api/features", isAuth, featuresRouters);
 app.use((req, res) => {
   res
     .status(404)
-   .json({message : "404 : Page not found"})
+   .json({message : "404 : NOT FOUND"})
 });
 
 export default app;

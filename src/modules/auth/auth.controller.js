@@ -86,7 +86,7 @@ export default class AuthController {
         attempts: 5,
         type: "sign-in",
       });
-      opt.save();
+      await opt.save();
       res.json({
         message: "OPT sent to user",
         opt: opt._id,
@@ -136,6 +136,42 @@ export default class AuthController {
     }
   }
 
+
+  static async forgotPassword(req, res) {
+    try {
+      const {email} = req.body
+      const user = await User.findOne( {email} )
+
+      if(!user) throw new CustomError("Email Not Found!",400)
+        
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiredAt = new Date(Date.now() + 10 * 60 * 1000);
+
+      const opt = await Opt.create({
+        userId: user._id,
+        code,
+        expiredAt,
+        attempts: 5,
+        type: "reset-password",
+      });
+      await opt.save();
+
+      res.json({
+        message: "OPT sent to user",
+        opt: opt._id,
+      });
+      await sendMail(
+        user.email,
+        subjects.reset_password,
+        resetPasswordTemplate({ code: code }),
+      );
+
+      return res.status(200).json(doc);
+    } catch (error) {
+      errorCatch(error, req, res);
+    }
+  }
+
   static async me(req, res) {
     try {
       const _id = req.user._id;
@@ -176,8 +212,9 @@ export default class AuthController {
         subjects.verification_mail,
         verificationMailTemplate({ code }),
       );
-      return res.status(200).json({message : "code sent to user" , opt : doc});
+      return res.status(200).json({message : "code sent to user" , opt : { attempts : doc.attempts , expiredAt : doc.expiredAt }});
     } catch (error) {
+      console.log(error)
       errorCatch(error, req, res);
     }
   }
