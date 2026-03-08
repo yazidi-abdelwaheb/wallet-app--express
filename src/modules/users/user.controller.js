@@ -133,7 +133,9 @@ export default class UserController {
 
   static async me(req, res) {
     try {
+      
       const _id = req.user._id;
+
       const doc = await User.findById(_id).select(
         "lastName firstName email role language theme",
       );
@@ -148,10 +150,9 @@ export default class UserController {
       const { _id } = req.user;
       let { theme } = req.body;
 
-      theme =
-        theme.trim().toUpperCase() in Object.values(userThemeEnums)
-          ? theme.trim().toUpperCase()
-          : userThemeEnums.light;
+      theme = Object.values(userThemeEnums).includes(theme.trim().toUpperCase())
+        ? theme.trim().toUpperCase()
+        : userThemeEnums.light;
 
       await User.updateOne({ _id }, { theme });
 
@@ -163,15 +164,16 @@ export default class UserController {
     }
   }
 
-   static async changeLanguage(req, res) {
+  static async changeLanguage(req, res) {
     try {
       const { _id } = req.user;
       let { language } = req.body;
 
-      language =
-        language.trim().toUpperCase() in Object.values(userLanguageEnums)
-          ? language.trim().toUpperCase()
-          : userLanguageEnums.en;
+      language = Object.values(userLanguageEnums).includes(
+        language.trim().toUpperCase(),
+      )
+        ? language.trim().toUpperCase()
+        : userLanguageEnums.en;
 
       await User.updateOne({ _id }, { language });
 
